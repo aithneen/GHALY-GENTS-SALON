@@ -1,0 +1,394 @@
+---
+import { Icon } from "astro-icon/components";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { packages } from "../config/packages";
+import { serviceById } from "../config/services";
+
+const packageData = packages.map((item) => ({
+  ...item,
+  services: item.availableServiceIds.map((id) => serviceById[id]),
+}));
+---
+
+<BaseLayout
+  title="GHALY GENTS SALON | صالون غالي للرجال"
+  description="الفخامة تبدأ من العناية بنفسك. خدمة احترافية، نتائج مضمونة، رضاكم هو هدفنا."
+>
+  <main>
+    <section class="brand-intro">
+      <div class="site-container brand-intro-inner">
+        <img
+          src="/brand/ghaly-lion-logo.png"
+          alt="GHALY GENTS SALON"
+          width="300"
+          height="350"
+          fetchpriority="high"
+        />
+        <p>LUXURY STARTS WITH SELF CARE</p>
+        <h1>الفخامة تبدأ من العناية بنفسك</h1>
+        <div class="hero-badges">
+          <span>خدمة احترافية</span>
+          <span>نتائج مضمونة</span>
+          <span>رضاكم هو هدفنا</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="offers-section">
+      <div class="site-container offers-stack">
+        {packages.map((item) => (
+          <article class:list={["offer-card", item.code === "royal_vip_300" && "offer-card-royal"]}>
+            <button
+              class="offer-card-trigger"
+              type="button"
+              data-package-code={item.code}
+              aria-label={`اختيار ${item.ar}`}
+            ></button>
+            <header class="offer-card-header">
+              <div>
+                <p>{item.en}</p>
+                <h2>{item.ar}</h2>
+              </div>
+              <div class="offer-price">
+                <strong>{item.price}</strong>
+                <span>درهم · AED</span>
+              </div>
+            </header>
+
+            <div class="offer-rule">
+              <Icon name={item.code === "royal_vip_300" ? "solar:crown-star-bold" : "solar:scissors-square-bold"} />
+              <strong>{item.fixedServiceIds ? "5 SERVICES INCLUDED" : `CHOOSE ANY ${item.limit} SERVICES`}</strong>
+              <span>{item.fixedServiceIds ? "الخدمات المشمولة" : `اختر ${item.limit} خدمات بمزاجك`}</span>
+            </div>
+
+            <ul class="offer-services">
+              {item.exampleServiceIds.map((id) => serviceById[id]).map((service) => (
+                <li>
+                  <span class="offer-service-icon">
+                    <Icon name={service.icon} />
+                    {service.modifierIcon && <Icon class="offer-service-modifier" name={service.modifierIcon} />}
+                  </span>
+                  <span>
+                    <strong>{service.ar}</strong>
+                    <small>{service.en}</small>
+                  </span>
+                </li>
+              ))}
+            </ul>
+
+            <footer class="offer-card-footer">
+              {item.fixedServiceIds ? (
+                <>
+                  <strong>5 خدمات مشمولة</strong>
+                  <span>5 SERVICES INCLUDED</span>
+                </>
+              ) : (
+                <>
+                <strong>اختر {item.limit} خدمات من بين {item.availableServiceIds.length} خدمة متاحة</strong>
+                <span>PLEASE CHOOSE ANY {item.limit} SERVICES</span>
+                </>
+              )}
+            </footer>
+          </article>
+        ))}
+      </div>
+    </section>
+
+    <dialog class="order-modal" id="order-modal" aria-labelledby="modal-title">
+      <div class="modal-frame">
+        <header class="modal-header">
+          <div>
+            <p id="modal-package-name">GHALY GENTS SALON</p>
+            <h2 id="modal-title">استمارة اختيار الخدمات</h2>
+          </div>
+          <button class="modal-close" type="button" data-close-modal aria-label="إغلاق">
+            <Icon name="solar:close-circle-linear" />
+          </button>
+        </header>
+
+        <div class="modal-progress" aria-label="مراحل استمارة اختيار الخدمات">
+          <span class="is-active" data-progress="services">الخدمات</span>
+          <span data-progress="details">البيانات</span>
+          <span data-progress="confirm">التأكيد</span>
+        </div>
+
+        <section class="modal-step is-active" data-step="services">
+          <div class="selection-heading">
+            <div>
+              <h3 id="selection-title">يرجى الاختيار</h3>
+              <p id="selection-description"></p>
+            </div>
+            <div class="selection-counter">
+              <strong id="selection-count">0</strong>
+              <span id="selection-limit">/ 0</span>
+            </div>
+          </div>
+          <div class="selection-grid" id="selection-grid"></div>
+          <p class="auto-continue" id="auto-continue" hidden>
+            الانتقال إلى البيانات خلال <strong id="auto-seconds">30</strong> ثانية
+          </p>
+          <div class="modal-actions">
+            <button class="modal-button modal-button-muted" type="button" data-close-modal>تراجع</button>
+            <button class="modal-button modal-button-gold" id="continue-details" type="button" disabled>استمرار</button>
+          </div>
+        </section>
+
+        <section class="modal-step" data-step="details">
+          <h3>البيانات</h3>
+          <form class="customer-form" id="customer-form">
+            <label>
+              <span>الاسم / Name</span>
+              <input name="customerName" autocomplete="name" required />
+            </label>
+            <label>
+              <span>رقم الهاتف / Phone</span>
+              <input name="phone" dir="ltr" inputmode="tel" autocomplete="tel" required />
+            </label>
+            <label>
+              <span>تاريخ الحضور</span>
+              <input name="arrivalDate" type="date" required />
+            </label>
+            <label>
+              <span>وقت الحضور</span>
+              <input name="arrivalTime" type="time" required />
+            </label>
+            <label class="notes-field">
+              <span>ملاحظات / Notes</span>
+              <textarea name="notes" maxlength="500"></textarea>
+            </label>
+            <div class="modal-actions notes-field">
+              <button class="modal-button modal-button-muted" type="button" id="back-services">تراجع</button>
+              <button class="modal-button modal-button-gold" type="submit">استمرار</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="modal-step" data-step="confirm">
+          <h3>التأكيد</h3>
+          <div class="confirmation-summary" id="confirmation-summary"></div>
+          <div class="modal-actions">
+            <button class="modal-button modal-button-muted" type="button" id="back-details">تراجع</button>
+            <button class="modal-button modal-button-gold" type="button" id="save-order">تأكيد</button>
+          </div>
+        </section>
+
+        <section class="modal-step success-step" data-step="success">
+          <Icon name="solar:check-circle-bold" />
+          <h3>تم التأكيد</h3>
+          <p>يرجى التحدث مع الاستقبال</p>
+          <button class="modal-button modal-button-gold" type="button" data-close-modal>إغلاق</button>
+        </section>
+      </div>
+    </dialog>
+
+    <div class="service-icon-templates" hidden>
+      {Object.values(serviceById).map((service) => (
+        <template data-icon-template={service.id}>
+          <Icon name={service.icon} />
+          {service.modifierIcon && <Icon class="choice-icon-modifier" name={service.modifierIcon} />}
+        </template>
+      ))}
+    </div>
+
+    <section class="visit-strip">
+      <div class="site-container visit-strip-inner">
+        <p>دبي · أبو هيل · الممزر سنتر · داخل المول · طابق M</p>
+        <a href="tel:+971509665607" dir="ltr">050 966 5607</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-container app-footer">
+    <p>GHALY GENTS SALON</p>
+    <p>Concept Preview</p>
+  </footer>
+
+  <script is:inline define:vars={{ packageData }}>
+    // @ts-nocheck
+    const modal = document.querySelector("#order-modal");
+    const modalPackageName = document.querySelector("#modal-package-name");
+    const selectionTitle = document.querySelector("#selection-title");
+    const selectionDescription = document.querySelector("#selection-description");
+    const selectionGrid = document.querySelector("#selection-grid");
+    const selectionCount = document.querySelector("#selection-count");
+    const selectionLimit = document.querySelector("#selection-limit");
+    const continueDetails = document.querySelector("#continue-details");
+    const autoContinue = document.querySelector("#auto-continue");
+    const autoSeconds = document.querySelector("#auto-seconds");
+    const customerForm = document.querySelector("#customer-form");
+    const confirmationSummary = document.querySelector("#confirmation-summary");
+    let activePackage = null;
+    let selectedIds = [];
+    let autoTimer = null;
+    let secondsRemaining = 30;
+
+    const setStep = (step) => {
+      document.querySelectorAll("[data-step]").forEach((section) => {
+        section.classList.toggle("is-active", section.dataset.step === step);
+      });
+      document.querySelectorAll("[data-progress]").forEach((item) => {
+        const order = ["services", "details", "confirm"];
+        item.classList.toggle("is-active", order.indexOf(item.dataset.progress) <= order.indexOf(step));
+      });
+    };
+
+    const stopAutoContinue = () => {
+      if (autoTimer) window.clearInterval(autoTimer);
+      autoTimer = null;
+      autoContinue.hidden = true;
+      secondsRemaining = 30;
+      autoSeconds.textContent = "30";
+    };
+
+    const startAutoContinue = () => {
+      if (autoTimer || activePackage.fixedServiceIds) return;
+      autoContinue.hidden = false;
+      autoTimer = window.setInterval(() => {
+        secondsRemaining -= 1;
+        autoSeconds.textContent = String(secondsRemaining);
+        if (secondsRemaining <= 0) {
+          stopAutoContinue();
+          setStep("details");
+        }
+      }, 1000);
+    };
+
+    const updateSelection = () => {
+      const isComplete = selectedIds.length === activePackage.limit;
+      selectionCount.textContent = String(selectedIds.length);
+      continueDetails.disabled = !isComplete;
+      selectionGrid.querySelectorAll(".service-choice").forEach((choice) => {
+        const selected = selectedIds.includes(choice.dataset.serviceId);
+        choice.classList.toggle("is-selected", selected);
+        choice.setAttribute("aria-pressed", String(selected));
+        choice.disabled = !selected && isComplete;
+      });
+      if (isComplete) startAutoContinue();
+      else stopAutoContinue();
+    };
+
+    const renderServices = () => {
+      selectionGrid.replaceChildren();
+      activePackage.services.forEach((service) => {
+        const choice = document.createElement("button");
+        choice.type = "button";
+        choice.className = "service-choice";
+        choice.dataset.serviceId = service.id;
+        choice.setAttribute("aria-pressed", "false");
+        const box = document.createElement("span");
+        const iconWrap = document.createElement("span");
+        const textWrap = document.createElement("span");
+        const arabicName = document.createElement("strong");
+        const englishName = document.createElement("small");
+        box.className = "choice-box";
+        iconWrap.className = "choice-icon";
+        const iconTemplate = document.querySelector(`[data-icon-template="${service.id}"]`);
+        if (iconTemplate) iconWrap.append(iconTemplate.content.cloneNode(true));
+        arabicName.textContent = service.ar;
+        englishName.textContent = service.en;
+        textWrap.append(arabicName, englishName);
+        choice.append(box, iconWrap, textWrap);
+        choice.addEventListener("click", () => {
+          if (activePackage.fixedServiceIds) return;
+          selectedIds = selectedIds.includes(service.id)
+            ? selectedIds.filter((id) => id !== service.id)
+            : [...selectedIds, service.id];
+          updateSelection();
+        });
+        selectionGrid.append(choice);
+      });
+      updateSelection();
+    };
+
+    const openPackage = (code) => {
+      activePackage = packageData.find((item) => item.code === code);
+      selectedIds = activePackage.fixedServiceIds ? [...activePackage.fixedServiceIds] : [];
+      customerForm.reset();
+      stopAutoContinue();
+      modalPackageName.textContent = activePackage.en;
+      selectionTitle.textContent = activePackage.fixedServiceIds
+        ? "5 خدمات مشمولة"
+        : `يرجى اختيار ${activePackage.limit} خدمات`;
+      selectionDescription.textContent = activePackage.fixedServiceIds
+        ? activePackage.ar
+        : `اختر ${activePackage.limit} خدمات من بين ${activePackage.services.length} خدمة متاحة`;
+      selectionLimit.textContent = `/ ${activePackage.limit}`;
+      setStep("services");
+      renderServices();
+      modal.showModal();
+    };
+
+    document.querySelectorAll("[data-package-code]").forEach((trigger) => {
+      trigger.addEventListener("click", () => openPackage(trigger.dataset.packageCode));
+    });
+
+    document.querySelectorAll("[data-close-modal]").forEach((button) => {
+      button.addEventListener("click", () => {
+        stopAutoContinue();
+        modal.close();
+      });
+    });
+
+    continueDetails.addEventListener("click", () => {
+      stopAutoContinue();
+      setStep("details");
+    });
+    document.querySelector("#back-services").addEventListener("click", () => setStep("services"));
+    document.querySelector("#back-details").addEventListener("click", () => setStep("details"));
+
+    customerForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const data = Object.fromEntries(new FormData(customerForm));
+      const chosenServices = selectedIds.map((id) => activePackage.services.find((service) => service.id === id));
+      confirmationSummary.replaceChildren();
+      const addSummaryRow = (label, value, direction) => {
+        const row = document.createElement("div");
+        const labelElement = document.createElement("span");
+        const valueElement = document.createElement("strong");
+        labelElement.textContent = label;
+        valueElement.textContent = value;
+        if (direction) valueElement.dir = direction;
+        row.append(labelElement, valueElement);
+        confirmationSummary.append(row);
+      };
+      addSummaryRow("العرض", activePackage.en);
+      addSummaryRow("الاسم / Name", data.customerName);
+      addSummaryRow("رقم الهاتف / Phone", data.phone, "ltr");
+      addSummaryRow("تاريخ الحضور", data.arrivalDate);
+      addSummaryRow("وقت الحضور", data.arrivalTime);
+      const servicesRow = document.createElement("div");
+      const servicesLabel = document.createElement("span");
+      const servicesList = document.createElement("ul");
+      servicesLabel.textContent = "الخدمات";
+      chosenServices.forEach((service) => {
+        const item = document.createElement("li");
+        item.textContent = service.ar;
+        servicesList.append(item);
+      });
+      servicesRow.append(servicesLabel, servicesList);
+      confirmationSummary.append(servicesRow);
+      if (data.notes) addSummaryRow("ملاحظات / Notes", data.notes);
+      setStep("confirm");
+    });
+
+    document.querySelector("#save-order").addEventListener("click", () => {
+      const data = Object.fromEntries(new FormData(customerForm));
+      const draftOrder = {
+        packageCode: activePackage.code,
+        selectedServiceIds: selectedIds,
+        ...data,
+        savedAt: new Date().toISOString(),
+      };
+      localStorage.setItem("ghaly-demo-order", JSON.stringify(draftOrder));
+      setStep("success");
+    });
+
+    modal.addEventListener("click", (event) => {
+      if (event.target === modal) {
+        stopAutoContinue();
+        modal.close();
+      }
+    });
+    modal.addEventListener("cancel", stopAutoContinue);
+  </script>
+</BaseLayout>
