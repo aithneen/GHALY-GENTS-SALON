@@ -275,19 +275,17 @@ const packageData = packages.map((item) => ({
         choice.className = "service-choice";
         choice.dataset.serviceId = service.id;
         choice.setAttribute("aria-pressed", "false");
-        const box = document.createElement("span");
         const iconWrap = document.createElement("span");
         const textWrap = document.createElement("span");
         const arabicName = document.createElement("strong");
         const englishName = document.createElement("small");
-        box.className = "choice-box";
         iconWrap.className = "choice-icon";
         const iconTemplate = document.querySelector(`[data-icon-template="${service.id}"]`);
         if (iconTemplate) iconWrap.append(iconTemplate.content.cloneNode(true));
         arabicName.textContent = service.ar;
         englishName.textContent = service.en;
         textWrap.append(arabicName, englishName);
-        choice.append(box, iconWrap, textWrap);
+        choice.append(iconWrap, textWrap);
         choice.addEventListener("click", () => {
           if (activePackage.fixedServiceIds) return;
           selectedIds = selectedIds.includes(service.id)
@@ -313,8 +311,12 @@ const packageData = packages.map((item) => ({
         ? activePackage.ar
         : `اختر ${activePackage.limit} خدمات من بين ${activePackage.services.length} خدمة متاحة`;
       selectionLimit.textContent = `/ ${activePackage.limit}`;
-      setStep("services");
-      renderServices();
+      if (activePackage.fixedServiceIds) {
+        setStep("details");
+      } else {
+        setStep("services");
+        renderServices();
+      }
       modal.showModal();
     };
 
