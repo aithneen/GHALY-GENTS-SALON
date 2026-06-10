@@ -9,6 +9,7 @@
     "preview": "astro preview"
   },
   "dependencies": {
+    "@astrojs/cloudflare": "^12.6.13",
     "@iconify-json/game-icons": "^1.2.4",
     "@iconify-json/hugeicons": "^1.2.29",
     "@iconify-json/icon-park-outline": "^1.2.4",

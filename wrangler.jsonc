@@ -1,0 +1,22 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "ghaly",
+  "main": "./dist/_worker.js/index.js",
+  "compatibility_date": "2026-06-10",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": "./dist"
+  },
+  "vars": {
+    "CONTROL_ALLOWED_EMAILS": "aithneen@gmail.com",
+    "CONTROL_DASHBOARD_URL": "https://ghaly.aithneen.workers.dev/control/orders"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "ghaly-orders",
+      "database_id": "dee8753f-717b-4a88-8c44-7b90c1e15d4a",
+      "migrations_dir": "migrations"
+    }
+  ]
+}

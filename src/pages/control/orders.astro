@@ -1,0 +1,141 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { packages } from "../../config/packages";
+import { services } from "../../config/services";
+import { getControlIdentity } from "../../lib/control";
+
+export const prerender = false;
+
+const identity = getControlIdentity(Astro.request, Astro.locals.runtime.env.CONTROL_ALLOWED_EMAILS);
+if (!identity) return new Response("Forbidden", { status: 403, headers: { "x-robots-tag": "noindex, nofollow" } });
+
+const referenceData = {
+  packages: Object.fromEntries(packages.map((item) => [item.code, { ar: item.ar, en: item.en }])),
+  services: Object.fromEntries(services.map((item) => [item.id, { ar: item.ar, en: item.en }])),
+};
+---
+
+<BaseLayout title="Orders | Ghaly Gents Salon" description="Ghaly Gents Salon orders dashboard">
+  <main class="control-shell">
+    <header class="control-header">
+      <div>
+        <p>GHALY GENTS SALON</p>
+        <h1>طلبات الصالون</h1>
+        <small dir="ltr">{identity}</small>
+      </div>
+      <button id="refresh-orders" type="button">تحديث</button>
+    </header>
+
+    <section class="control-filters" aria-label="فلاتر الطلبات">
+      <label><span>الحالة</span>
+        <select id="status-filter">
+          <option value="">الكل</option><option value="new">جديد</option>
+          <option value="acknowledged">تم الاطلاع</option><option value="completed">مكتمل</option>
+          <option value="cancelled">ملغي</option>
+        </select>
+      </label>
+      <label><input id="today-filter" type="checkbox" /> مواعيد اليوم</label>
+      <p id="orders-state" role="status">جاري تحميل الطلبات...</p>
+    </section>
+
+    <section class="orders-table-wrap">
+      <table class="orders-table">
+        <thead><tr><th>#</th><th>وقت الطلب</th><th>العميل</th><th>الهاتف</th><th>العرض</th><th>الخدمات</th><th>الحالة</th><th></th></tr></thead>
+        <tbody id="orders-table-body"></tbody>
+      </table>
+    </section>
+    <section class="orders-cards" id="orders-cards"></section>
+
+    <dialog class="control-dialog" id="order-details">
+      <div class="control-dialog-inner">
+        <header><h2 id="details-title">تفاصيل الطلب</h2><button type="button" id="close-details" aria-label="إغلاق">×</button></header>
+        <div id="details-content"></div>
+        <footer id="status-actions"></footer>
+      </div>
+    </dialog>
+  </main>
+
+  <script is:inline define:vars={{ referenceData }}>
+    const statusLabels = { new: "جديد", acknowledged: "تم الاطلاع", completed: "مكتمل", cancelled: "ملغي" };
+    const state = document.querySelector("#orders-state");
+    const tableBody = document.querySelector("#orders-table-body");
+    const cards = document.querySelector("#orders-cards");
+    const dialog = document.querySelector("#order-details");
+    let orders = [];
+
+    const packageName = (code) => referenceData.packages[code]?.ar || code;
+    const serviceName = (id) => referenceData.services[id]?.ar || id;
+    const formatDate = (value) => new Intl.DateTimeFormat("ar-AE", { dateStyle: "short", timeStyle: "short" }).format(new Date(`${value}Z`));
+
+    const openDetails = (id) => {
+      const order = orders.find((item) => item.id === id);
+      if (!order) return;
+      document.querySelector("#details-title").textContent = `طلب #${order.id}`;
+      const content = document.querySelector("#details-content");
+      content.replaceChildren();
+      const rows = [
+        ["العميل", order.customer_name], ["الهاتف", order.phone], ["العرض", packageName(order.package_code)],
+        ["موعد الحضور", `${order.arrival_date} · ${order.arrival_time}`], ["تفضيل الموظف", order.staff_preference || "—"],
+        ["ملاحظات", order.notes || "—"], ["وقت الطلب", formatDate(order.created_at)],
+      ];
+      rows.forEach(([label, value]) => {
+        const row = document.createElement("p"); const strong = document.createElement("strong"); const span = document.createElement("span");
+        strong.textContent = label; span.textContent = value; row.append(strong, span); content.append(row);
+      });
+      const list = document.createElement("ul");
+      order.selectedServiceIds.forEach((id) => { const item = document.createElement("li"); item.textContent = serviceName(id); list.append(item); });
+      content.append(list);
+      const actions = document.querySelector("#status-actions"); actions.replaceChildren();
+      Object.entries(statusLabels).forEach(([status, label]) => {
+        const button = document.createElement("button"); button.type = "button"; button.textContent = label; button.disabled = status === order.status;
+        button.addEventListener("click", () => updateStatus(order.id, status)); actions.append(button);
+      });
+      dialog.showModal();
+    };
+
+    const render = () => {
+      tableBody.replaceChildren(); cards.replaceChildren();
+      orders.forEach((order) => {
+        const row = document.createElement("tr");
+        [order.id, formatDate(order.created_at), order.customer_name, order.phone, packageName(order.package_code), order.selectedServiceIds.length, statusLabels[order.status]].forEach((value) => {
+          const cell = document.createElement("td"); cell.textContent = value; row.append(cell);
+        });
+        const actionCell = document.createElement("td"); const action = document.createElement("button"); action.type = "button"; action.textContent = "التفاصيل";
+        action.addEventListener("click", () => openDetails(order.id)); actionCell.append(action); row.append(actionCell); tableBody.append(row);
+        const card = document.createElement("button"); card.type = "button"; card.className = "order-card";
+        const title = document.createElement("strong"); title.textContent = `#${order.id} · ${order.customer_name}`;
+        const meta = document.createElement("span"); meta.textContent = `${packageName(order.package_code)} · ${order.arrival_date} ${order.arrival_time}`;
+        const badge = document.createElement("small"); badge.textContent = statusLabels[order.status]; badge.dataset.status = order.status;
+        card.append(title, meta, badge); card.addEventListener("click", () => openDetails(order.id)); cards.append(card);
+      });
+      state.textContent = orders.length ? `${orders.length} طلب` : "لا توجد طلبات";
+    };
+
+    const loadOrders = async () => {
+      state.textContent = "جاري التحديث...";
+      const params = new URLSearchParams();
+      const status = document.querySelector("#status-filter").value;
+      if (status) params.set("status", status);
+      if (document.querySelector("#today-filter").checked) params.set("date", "today");
+      try {
+        const response = await fetch(`/api/control/orders?${params}`, { headers: { accept: "application/json" } });
+        const result = await response.json(); if (!response.ok) throw new Error(result.error);
+        orders = result.orders; render();
+      } catch { state.textContent = "تعذر تحميل الطلبات"; }
+    };
+
+    const updateStatus = async (id, status) => {
+      const response = await fetch(`/api/control/orders/${id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ status }) });
+      if (response.ok) { dialog.close(); await loadOrders(); }
+    };
+    document.querySelector("#refresh-orders").addEventListener("click", loadOrders);
+    document.querySelector("#status-filter").addEventListener("change", loadOrders);
+    document.querySelector("#today-filter").addEventListener("change", loadOrders);
+    document.querySelector("#close-details").addEventListener("click", () => dialog.close());
+    loadOrders(); window.setInterval(loadOrders, 15000);
+  </script>
+</BaseLayout>
+
+<style>
+  .control-shell{max-width:1200px;margin-inline:auto;padding:24px;color:#fff;direction:rtl}.control-header,.control-filters{display:flex;gap:16px;align-items:center;justify-content:space-between;margin-block-end:24px}.control-header h1{font-size:clamp(2rem,6vw,4rem);color:#f0d07a}.control-header button,.control-filters select,.control-dialog button,.orders-table button{min-height:44px;border:1px solid #d49a22;border-radius:10px;padding:8px 16px;background:#16120a;color:#fff}.control-filters{justify-content:flex-start;flex-wrap:wrap}.control-filters label{display:flex;gap:8px;align-items:center}.orders-table-wrap{overflow:auto;border:1px solid #4d3b18;border-radius:16px}.orders-table{width:100%;border-collapse:collapse;min-width:900px}.orders-table th,.orders-table td{padding:14px;border-block-end:1px solid #302612;text-align:start}.orders-cards{display:none}.control-dialog{width:min(680px,calc(100% - 24px));border:1px solid #d49a22;border-radius:18px;background:#111;color:#fff}.control-dialog-inner{padding:20px}.control-dialog header{display:flex;justify-content:space-between;align-items:center}.control-dialog p{display:grid;grid-template-columns:130px 1fr;gap:12px;padding-block:8px;border-block-end:1px solid #302612}.control-dialog footer{display:flex;gap:8px;flex-wrap:wrap;margin-block-start:20px}.control-dialog button:disabled{opacity:.45}.order-card{width:100%;min-height:88px;border:1px solid #4d3b18;border-radius:14px;background:#111;color:#fff;padding:16px;text-align:start;display:grid;gap:6px}.order-card small{color:#f0d07a}@media(max-width:767px){.control-header{align-items:flex-start}.orders-table-wrap{display:none}.orders-cards{display:grid;gap:12px}.control-dialog p{grid-template-columns:1fr}.control-shell{padding:16px}}
+</style>

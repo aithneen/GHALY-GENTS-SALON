@@ -4,6 +4,8 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import { packages } from "../config/packages";
 import { serviceById } from "../config/services";
 
+export const prerender = true;
+
 const packageData = packages.map((item) => ({
   ...item,
   services: item.availableServiceIds.map((id) => serviceById[id]),
@@ -162,6 +164,14 @@ const packageData = packages.map((item) => ({
               <input name="arrivalTime" type="time" required />
             </label>
             <label class="notes-field">
+              <span data-i18n="staffPreference">تفضيل الموظف / Staff preference</span>
+              <input name="staffPreference" maxlength="100" />
+            </label>
+            <label class="spam-field" aria-hidden="true">
+              <span>Website</span>
+              <input name="website" tabindex="-1" autocomplete="off" />
+            </label>
+            <label class="notes-field">
               <span data-i18n="notesLabel">ملاحظات / Notes</span>
               <textarea name="notes" maxlength="500"></textarea>
             </label>
@@ -249,7 +259,7 @@ const packageData = packages.map((item) => ({
         formTitle: "استمارة اختيار الخدمات", services: "الخدمات", details: "البيانات", confirm: "التأكيد",
         autoContinue: "الانتقال إلى البيانات خلال", seconds: "ثانية", back: "تراجع", continue: "استمرار",
         nameLabel: "الاسم / Name", phoneLabel: "رقم الهاتف / Phone", arrivalDate: "تاريخ الحضور",
-        arrivalTime: "وقت الحضور", notesLabel: "ملاحظات / Notes", confirmed: "تم التأكيد",
+        arrivalTime: "وقت الحضور", staffPreference: "تفضيل الموظف / Staff preference", notesLabel: "ملاحظات / Notes", confirmed: "تم التأكيد",
         speakReception: "يرجى التحدث مع الاستقبال", close: "إغلاق", fiveIncluded: "5 خدمات مشمولة",
         includedServices: "الخدمات المشمولة", chooseMood: (limit) => `اختر ${limit} خدمات بمزاجك`,
         availableRule: (limit, available) => `اختر ${limit} خدمات من بين ${available} خدمة متاحة`,
@@ -265,7 +275,7 @@ const packageData = packages.map((item) => ({
         formTitle: "Service Selection Form", services: "Services", details: "Details", confirm: "Confirm",
         autoContinue: "Continuing to details in", seconds: "seconds", back: "Back", continue: "Continue",
         nameLabel: "Name", phoneLabel: "Phone", arrivalDate: "Arrival Date",
-        arrivalTime: "Arrival Time", notesLabel: "Notes", confirmed: "Confirmed",
+        arrivalTime: "Arrival Time", staffPreference: "Staff preference", notesLabel: "Notes", confirmed: "Confirmed",
         speakReception: "Please speak with reception", close: "Close", fiveIncluded: "5 Services Included",
         includedServices: "Included Services", chooseMood: (limit) => `Choose Any ${limit} Services`,
         availableRule: (limit, available) => `Choose ${limit} services from ${available} available services`,
@@ -486,16 +496,37 @@ const packageData = packages.map((item) => ({
       setStep("confirm");
     });
 
-    document.querySelector("#save-order").addEventListener("click", () => {
+    document.querySelector("#save-order").addEventListener("click", async (event) => {
+      const saveButton = event.currentTarget;
       const data = Object.fromEntries(new FormData(customerForm));
-      const draftOrder = {
+      const order = {
+        customerName: data.customerName,
+        phone: data.phone,
         packageCode: activePackage.code,
         selectedServiceIds: selectedIds,
-        ...data,
-        savedAt: new Date().toISOString(),
+        arrivalDate: data.arrivalDate,
+        arrivalTime: data.arrivalTime,
+        staffPreference: data.staffPreference,
+        notes: data.notes,
+        website: data.website,
       };
-      localStorage.setItem("ghaly-demo-order", JSON.stringify(draftOrder));
-      setStep("success");
+      saveButton.disabled = true;
+      try {
+        const response = await fetch("/api/orders", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(order),
+        });
+        const result = await response.json();
+        if (!response.ok || !result.ok) throw new Error(result.error || "Unable to save order.");
+        document.querySelector("[data-step='success'] p").textContent =
+          `${translations[language].speakReception} · #${result.orderId}`;
+        setStep("success");
+      } catch (error) {
+        window.alert(error instanceof Error ? error.message : "Unable to save order.");
+      } finally {
+        saveButton.disabled = false;
+      }
     });
 
     modal.addEventListener("click", (event) => {

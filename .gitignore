@@ -4,3 +4,7 @@ dist/
 .DS_Store
 .icon-review/
 tmp/
+.dev.vars
+.env
+.env.*
+.wrangler/
