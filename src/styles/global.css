@@ -73,9 +73,26 @@ a:focus-visible {
 }
 
 .brand-intro-inner {
+  position: relative;
   display: grid;
   justify-items: center;
   text-align: center;
+}
+
+.language-switch {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: 0;
+  min-width: 5.5rem;
+  min-height: 44px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-pill);
+  background: var(--color-panel-soft);
+  color: var(--color-gold-light);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .brand-intro img {
@@ -385,6 +402,17 @@ a:focus-visible {
   opacity: 0.38;
 }
 
+.service-choice.is-exclusive-disabled {
+  border-style: dashed;
+  opacity: 0.48;
+}
+
+.service-choice.is-exclusive-disabled:hover,
+.service-choice.is-exclusive-disabled:focus-visible {
+  border-color: var(--color-gold);
+  opacity: 0.75;
+}
+
 .service-choice.is-selected {
   border-color: var(--color-gold);
   background: linear-gradient(135deg, rgb(212 154 34 / 28%), rgb(212 154 34 / 10%));
@@ -534,6 +562,65 @@ a:focus-visible {
 
 .success-step p {
   color: var(--color-muted);
+}
+
+.upgrade-notice {
+  position: fixed;
+  z-index: 20;
+  inset-inline: 1rem;
+  inset-block-end: 1rem;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: 34rem;
+  margin-inline: auto;
+  border: 1px solid var(--color-gold);
+  border-radius: 1rem;
+  background: var(--color-panel);
+  padding: 0.85rem;
+  box-shadow: 0 18px 60px rgb(0 0 0 / 55%);
+}
+
+.upgrade-notice[hidden] {
+  display: none;
+}
+
+.upgrade-notice > svg {
+  width: 2rem;
+  height: 2rem;
+  color: var(--color-gold);
+}
+
+.upgrade-notice strong,
+.upgrade-notice span {
+  display: block;
+}
+
+.upgrade-notice strong {
+  color: var(--color-gold-light);
+  font-size: 0.85rem;
+}
+
+.upgrade-notice span {
+  color: var(--color-muted);
+  font-size: 0.7rem;
+}
+
+.upgrade-notice button {
+  display: grid;
+  min-width: 44px;
+  min-height: 44px;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: var(--color-muted);
+  cursor: pointer;
+}
+
+.upgrade-notice button svg {
+  width: 1.4rem;
+  height: 1.4rem;
 }
 
 .offer-card-header {

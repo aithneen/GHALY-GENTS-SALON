@@ -17,6 +17,7 @@ const packageData = packages.map((item) => ({
   <main>
     <section class="brand-intro">
       <div class="site-container brand-intro-inner">
+        <button class="language-switch" id="language-switch" type="button">English</button>
         <img
           src="/brand/ghaly-lion-logo.png"
           alt="GHALY GENTS SALON"
@@ -24,12 +25,12 @@ const packageData = packages.map((item) => ({
           height="350"
           fetchpriority="high"
         />
-        <p>LUXURY STARTS WITH SELF CARE</p>
-        <h1>الفخامة تبدأ من العناية بنفسك</h1>
+        <p data-i18n="heroEyebrow">LUXURY STARTS WITH SELF CARE</p>
+        <h1 data-i18n="heroTitle">الفخامة تبدأ من العناية بنفسك</h1>
         <div class="hero-badges">
-          <span>خدمة احترافية</span>
-          <span>نتائج مضمونة</span>
-          <span>رضاكم هو هدفنا</span>
+          <span data-i18n="professionalService">خدمة احترافية</span>
+          <span data-i18n="guaranteedResults">نتائج مضمونة</span>
+          <span data-i18n="satisfactionGoal">رضاكم هو هدفنا</span>
         </div>
       </div>
     </section>
@@ -47,7 +48,7 @@ const packageData = packages.map((item) => ({
             <header class="offer-card-header">
               <div>
                 <p>{item.en}</p>
-                <h2>{item.ar}</h2>
+                <h2 data-package-ar={item.ar} data-package-en={item.en}>{item.ar}</h2>
               </div>
               <div class="offer-price">
                 <strong>{item.price}</strong>
@@ -58,7 +59,11 @@ const packageData = packages.map((item) => ({
             <div class="offer-rule">
               <Icon name={item.code === "royal_vip_300" ? "solar:crown-star-bold" : "solar:scissors-square-bold"} />
               <strong>{item.fixedServiceIds ? "5 SERVICES INCLUDED" : `CHOOSE ANY ${item.limit} SERVICES`}</strong>
-              <span>{item.fixedServiceIds ? "الخدمات المشمولة" : `اختر ${item.limit} خدمات بمزاجك`}</span>
+              <span
+                data-package-rule
+                data-fixed={String(Boolean(item.fixedServiceIds))}
+                data-limit={item.limit}
+              >{item.fixedServiceIds ? "الخدمات المشمولة" : `اختر ${item.limit} خدمات بمزاجك`}</span>
             </div>
 
             <ul class="offer-services">
@@ -69,8 +74,8 @@ const packageData = packages.map((item) => ({
                     {service.modifierIcon && <Icon class="offer-service-modifier" name={service.modifierIcon} />}
                   </span>
                   <span>
-                    <strong>{service.ar}</strong>
-                    <small>{service.en}</small>
+                  <strong data-service-ar={service.ar} data-service-en={service.en}>{service.ar}</strong>
+                  <small data-service-secondary data-service-ar={service.ar} data-service-en={service.en}>{service.en}</small>
                   </span>
                 </li>
               ))}
@@ -79,12 +84,16 @@ const packageData = packages.map((item) => ({
             <footer class="offer-card-footer">
               {item.fixedServiceIds ? (
                 <>
-                  <strong>5 خدمات مشمولة</strong>
+                  <strong data-i18n="fiveIncluded">5 خدمات مشمولة</strong>
                   <span>5 SERVICES INCLUDED</span>
                 </>
               ) : (
                 <>
-                <strong>اختر {item.limit} خدمات من بين {item.availableServiceIds.length} خدمة متاحة</strong>
+                <strong
+                  data-available-rule
+                  data-limit={item.limit}
+                  data-available={item.availableServiceIds.length}
+                >اختر {item.limit} خدمات من بين {item.availableServiceIds.length} خدمة متاحة</strong>
                 <span>PLEASE CHOOSE ANY {item.limit} SERVICES</span>
                 </>
               )}
@@ -99,7 +108,7 @@ const packageData = packages.map((item) => ({
         <header class="modal-header">
           <div>
             <p id="modal-package-name">GHALY GENTS SALON</p>
-            <h2 id="modal-title">استمارة اختيار الخدمات</h2>
+            <h2 id="modal-title" data-i18n="formTitle">استمارة اختيار الخدمات</h2>
           </div>
           <button class="modal-close" type="button" data-close-modal aria-label="إغلاق">
             <Icon name="solar:close-circle-linear" />
@@ -107,9 +116,9 @@ const packageData = packages.map((item) => ({
         </header>
 
         <div class="modal-progress" aria-label="مراحل استمارة اختيار الخدمات">
-          <span class="is-active" data-progress="services">الخدمات</span>
-          <span data-progress="details">البيانات</span>
-          <span data-progress="confirm">التأكيد</span>
+          <span class="is-active" data-progress="services" data-i18n="services">الخدمات</span>
+          <span data-progress="details" data-i18n="details">البيانات</span>
+          <span data-progress="confirm" data-i18n="confirm">التأكيد</span>
         </div>
 
         <section class="modal-step is-active" data-step="services">
@@ -125,61 +134,72 @@ const packageData = packages.map((item) => ({
           </div>
           <div class="selection-grid" id="selection-grid"></div>
           <p class="auto-continue" id="auto-continue" hidden>
-            الانتقال إلى البيانات خلال <strong id="auto-seconds">30</strong> ثانية
+            <span data-i18n="autoContinue">الانتقال إلى البيانات خلال</span> <strong id="auto-seconds">30</strong> <span data-i18n="seconds">ثانية</span>
           </p>
           <div class="modal-actions">
-            <button class="modal-button modal-button-muted" type="button" data-close-modal>تراجع</button>
-            <button class="modal-button modal-button-gold" id="continue-details" type="button" disabled>استمرار</button>
+            <button class="modal-button modal-button-muted" type="button" data-close-modal data-i18n="back">تراجع</button>
+            <button class="modal-button modal-button-gold" id="continue-details" type="button" disabled data-i18n="continue">استمرار</button>
           </div>
         </section>
 
         <section class="modal-step" data-step="details">
-          <h3>البيانات</h3>
+          <h3 data-i18n="details">البيانات</h3>
           <form class="customer-form" id="customer-form">
             <label>
-              <span>الاسم / Name</span>
+              <span data-i18n="nameLabel">الاسم / Name</span>
               <input name="customerName" autocomplete="name" required />
             </label>
             <label>
-              <span>رقم الهاتف / Phone</span>
+              <span data-i18n="phoneLabel">رقم الهاتف / Phone</span>
               <input name="phone" dir="ltr" inputmode="tel" autocomplete="tel" required />
             </label>
             <label>
-              <span>تاريخ الحضور</span>
+              <span data-i18n="arrivalDate">تاريخ الحضور</span>
               <input name="arrivalDate" type="date" required />
             </label>
             <label>
-              <span>وقت الحضور</span>
+              <span data-i18n="arrivalTime">وقت الحضور</span>
               <input name="arrivalTime" type="time" required />
             </label>
             <label class="notes-field">
-              <span>ملاحظات / Notes</span>
+              <span data-i18n="notesLabel">ملاحظات / Notes</span>
               <textarea name="notes" maxlength="500"></textarea>
             </label>
             <div class="modal-actions notes-field">
-              <button class="modal-button modal-button-muted" type="button" id="back-services">تراجع</button>
-              <button class="modal-button modal-button-gold" type="submit">استمرار</button>
+              <button class="modal-button modal-button-muted" type="button" id="back-services" data-i18n="back">تراجع</button>
+              <button class="modal-button modal-button-gold" type="submit" data-i18n="continue">استمرار</button>
             </div>
           </form>
         </section>
 
         <section class="modal-step" data-step="confirm">
-          <h3>التأكيد</h3>
+          <h3 data-i18n="confirm">التأكيد</h3>
           <div class="confirmation-summary" id="confirmation-summary"></div>
           <div class="modal-actions">
-            <button class="modal-button modal-button-muted" type="button" id="back-details">تراجع</button>
-            <button class="modal-button modal-button-gold" type="button" id="save-order">تأكيد</button>
+            <button class="modal-button modal-button-muted" type="button" id="back-details" data-i18n="back">تراجع</button>
+            <button class="modal-button modal-button-gold" type="button" id="save-order" data-i18n="confirm">تأكيد</button>
           </div>
         </section>
 
         <section class="modal-step success-step" data-step="success">
           <Icon name="solar:check-circle-bold" />
-          <h3>تم التأكيد</h3>
-          <p>يرجى التحدث مع الاستقبال</p>
-          <button class="modal-button modal-button-gold" type="button" data-close-modal>إغلاق</button>
+          <h3 data-i18n="confirmed">تم التأكيد</h3>
+          <p data-i18n="speakReception">يرجى التحدث مع الاستقبال</p>
+          <button class="modal-button modal-button-gold" type="button" data-close-modal data-i18n="close">إغلاق</button>
         </section>
       </div>
     </dialog>
+
+    <div class="upgrade-notice" id="upgrade-notice" role="status" aria-live="polite" hidden>
+      <Icon name="solar:crown-star-bold" />
+      <div>
+        <strong data-i18n="upgradeTitle">قم بترقية الباقة</strong>
+        <span data-i18n="upgradeMessage">للجمع بين الحمام المغربي وجلسة الفيشل، اختر العرض الملكي VIP.</span>
+      </div>
+      <button type="button" id="upgrade-close" aria-label="إغلاق">
+        <Icon name="solar:close-circle-linear" />
+      </button>
+    </div>
 
     <div class="service-icon-templates" hidden>
       {Object.values(serviceById).map((service) => (
@@ -192,7 +212,7 @@ const packageData = packages.map((item) => ({
 
     <section class="visit-strip">
       <div class="site-container visit-strip-inner">
-        <p>دبي · أبو هيل · الممزر سنتر · داخل المول · طابق M</p>
+        <p data-i18n="address">دبي · أبو هيل · الممزر سنتر · داخل المول · طابق M</p>
         <a href="tel:+971509665607" dir="ltr">050 966 5607</a>
       </div>
     </section>
@@ -200,7 +220,7 @@ const packageData = packages.map((item) => ({
 
   <footer class="site-container app-footer">
     <p>GHALY GENTS SALON</p>
-    <p>Concept Preview</p>
+    <p data-i18n="conceptPreview">Concept Preview</p>
   </footer>
 
   <script is:inline define:vars={{ packageData }}>
@@ -221,6 +241,69 @@ const packageData = packages.map((item) => ({
     let selectedIds = [];
     let autoTimer = null;
     let secondsRemaining = 30;
+    let language = localStorage.getItem("ghaly-language") || "ar";
+    const translations = {
+      ar: {
+        heroEyebrow: "LUXURY STARTS WITH SELF CARE", heroTitle: "الفخامة تبدأ من العناية بنفسك",
+        professionalService: "خدمة احترافية", guaranteedResults: "نتائج مضمونة", satisfactionGoal: "رضاكم هو هدفنا",
+        formTitle: "استمارة اختيار الخدمات", services: "الخدمات", details: "البيانات", confirm: "التأكيد",
+        autoContinue: "الانتقال إلى البيانات خلال", seconds: "ثانية", back: "تراجع", continue: "استمرار",
+        nameLabel: "الاسم / Name", phoneLabel: "رقم الهاتف / Phone", arrivalDate: "تاريخ الحضور",
+        arrivalTime: "وقت الحضور", notesLabel: "ملاحظات / Notes", confirmed: "تم التأكيد",
+        speakReception: "يرجى التحدث مع الاستقبال", close: "إغلاق", fiveIncluded: "5 خدمات مشمولة",
+        includedServices: "الخدمات المشمولة", chooseMood: (limit) => `اختر ${limit} خدمات بمزاجك`,
+        availableRule: (limit, available) => `اختر ${limit} خدمات من بين ${available} خدمة متاحة`,
+        chooseRequired: (limit) => `يرجى اختيار ${limit} خدمات`,
+        upgradeTitle: "قم بترقية الباقة",
+        upgradeMessage: "للجمع بين الحمام المغربي وجلسة الفيشل، اختر العرض الملكي VIP.",
+        package: "العرض", selectedServices: "الخدمات", address: "دبي · أبو هيل · الممزر سنتر · داخل المول · طابق M",
+        conceptPreview: "نموذج تصوري",
+      },
+      en: {
+        heroEyebrow: "LUXURY STARTS WITH SELF CARE", heroTitle: "Luxury Starts With Self Care",
+        professionalService: "Professional Service", guaranteedResults: "Guaranteed Results", satisfactionGoal: "Your Satisfaction Is Our Goal",
+        formTitle: "Service Selection Form", services: "Services", details: "Details", confirm: "Confirm",
+        autoContinue: "Continuing to details in", seconds: "seconds", back: "Back", continue: "Continue",
+        nameLabel: "Name", phoneLabel: "Phone", arrivalDate: "Arrival Date",
+        arrivalTime: "Arrival Time", notesLabel: "Notes", confirmed: "Confirmed",
+        speakReception: "Please speak with reception", close: "Close", fiveIncluded: "5 Services Included",
+        includedServices: "Included Services", chooseMood: (limit) => `Choose Any ${limit} Services`,
+        availableRule: (limit, available) => `Choose ${limit} services from ${available} available services`,
+        chooseRequired: (limit) => `Please choose ${limit} services`,
+        upgradeTitle: "Upgrade Your Package",
+        upgradeMessage: "To combine Moroccan Bath and Facial Session, choose the Royal VIP offer.",
+        package: "Package", selectedServices: "Services", address: "Dubai · Abu Hail · Al Mamzar Centre · Inside the Mall · M Floor",
+        conceptPreview: "Concept Preview",
+      },
+    };
+
+    const applyLanguage = () => {
+      const dictionary = translations[language];
+      document.documentElement.lang = language === "ar" ? "ar-AE" : "en";
+      document.documentElement.dir = language === "ar" ? "rtl" : "ltr";
+      document.querySelector("#language-switch").textContent = language === "ar" ? "English" : "العربية";
+      document.querySelectorAll("[data-i18n]").forEach((element) => {
+        const value = dictionary[element.dataset.i18n];
+        if (typeof value === "string") element.textContent = value;
+      });
+      document.querySelectorAll("[data-service-ar]").forEach((element) => {
+        element.textContent = language === "ar" ? element.dataset.serviceAr : element.dataset.serviceEn;
+      });
+      document.querySelectorAll("[data-package-ar]").forEach((element) => {
+        element.textContent = language === "ar" ? element.dataset.packageAr : element.dataset.packageEn;
+      });
+      document.querySelectorAll("[data-service-secondary]").forEach((element) => {
+        element.textContent = language === "ar" ? element.dataset.serviceEn : element.dataset.serviceAr;
+      });
+      document.querySelectorAll("[data-package-rule]").forEach((element) => {
+        element.textContent = element.dataset.fixed === "true"
+          ? dictionary.includedServices
+          : dictionary.chooseMood(element.dataset.limit);
+      });
+      document.querySelectorAll("[data-available-rule]").forEach((element) => {
+        element.textContent = dictionary.availableRule(element.dataset.limit, element.dataset.available);
+      });
+    };
 
     const setStep = (step) => {
       document.querySelectorAll("[data-step]").forEach((section) => {
@@ -259,12 +342,19 @@ const packageData = packages.map((item) => ({
       continueDetails.disabled = !isComplete;
       selectionGrid.querySelectorAll(".service-choice").forEach((choice) => {
         const selected = selectedIds.includes(choice.dataset.serviceId);
+        const blockedByExclusiveChoice = activePackage.code === "offer_150"
+          && ((choice.dataset.serviceId === "moroccan_bath" && selectedIds.includes("facial_session"))
+          || (choice.dataset.serviceId === "facial_session" && selectedIds.includes("moroccan_bath")));
         choice.classList.toggle("is-selected", selected);
+        choice.classList.toggle("is-exclusive-disabled", blockedByExclusiveChoice);
         choice.setAttribute("aria-pressed", String(selected));
-        choice.disabled = !selected && isComplete;
+        choice.disabled = !selected && isComplete && !blockedByExclusiveChoice;
       });
       if (isComplete) startAutoContinue();
       else stopAutoContinue();
+      if (!selectedIds.includes("moroccan_bath") && !selectedIds.includes("facial_session")) {
+        document.querySelector("#upgrade-notice").hidden = true;
+      }
     };
 
     const renderServices = () => {
@@ -282,12 +372,19 @@ const packageData = packages.map((item) => ({
         iconWrap.className = "choice-icon";
         const iconTemplate = document.querySelector(`[data-icon-template="${service.id}"]`);
         if (iconTemplate) iconWrap.append(iconTemplate.content.cloneNode(true));
-        arabicName.textContent = service.ar;
-        englishName.textContent = service.en;
+        arabicName.textContent = language === "ar" ? service.ar : service.en;
+        englishName.textContent = language === "ar" ? service.en : service.ar;
         textWrap.append(arabicName, englishName);
         choice.append(iconWrap, textWrap);
         choice.addEventListener("click", () => {
           if (activePackage.fixedServiceIds) return;
+          const isExclusiveBlocked = activePackage.code === "offer_150"
+            && ((service.id === "moroccan_bath" && selectedIds.includes("facial_session"))
+            || (service.id === "facial_session" && selectedIds.includes("moroccan_bath")));
+          if (isExclusiveBlocked) {
+            document.querySelector("#upgrade-notice").hidden = false;
+            return;
+          }
           selectedIds = selectedIds.includes(service.id)
             ? selectedIds.filter((id) => id !== service.id)
             : [...selectedIds, service.id];
@@ -303,13 +400,13 @@ const packageData = packages.map((item) => ({
       selectedIds = activePackage.fixedServiceIds ? [...activePackage.fixedServiceIds] : [];
       customerForm.reset();
       stopAutoContinue();
-      modalPackageName.textContent = activePackage.en;
+      modalPackageName.textContent = language === "ar" ? activePackage.ar : activePackage.en;
       selectionTitle.textContent = activePackage.fixedServiceIds
-        ? "5 خدمات مشمولة"
-        : `يرجى اختيار ${activePackage.limit} خدمات`;
+        ? translations[language].fiveIncluded
+        : translations[language].chooseRequired(activePackage.limit);
       selectionDescription.textContent = activePackage.fixedServiceIds
         ? activePackage.ar
-        : `اختر ${activePackage.limit} خدمات من بين ${activePackage.services.length} خدمة متاحة`;
+        : translations[language].availableRule(activePackage.limit, activePackage.services.length);
       selectionLimit.textContent = `/ ${activePackage.limit}`;
       if (activePackage.fixedServiceIds) {
         setStep("details");
@@ -318,7 +415,23 @@ const packageData = packages.map((item) => ({
         renderServices();
       }
       modal.showModal();
+      applyLanguage();
     };
+
+    document.querySelector("#language-switch").addEventListener("click", () => {
+      language = language === "ar" ? "en" : "ar";
+      localStorage.setItem("ghaly-language", language);
+      applyLanguage();
+      if (activePackage && modal.open) {
+        modalPackageName.textContent = language === "ar" ? activePackage.ar : activePackage.en;
+        selectionTitle.textContent = activePackage.fixedServiceIds
+          ? translations[language].fiveIncluded
+          : translations[language].chooseRequired(activePackage.limit);
+        selectionDescription.textContent = activePackage.fixedServiceIds
+          ? (language === "ar" ? activePackage.ar : activePackage.en)
+          : translations[language].availableRule(activePackage.limit, activePackage.services.length);
+      }
+    });
 
     document.querySelectorAll("[data-package-code]").forEach((trigger) => {
       trigger.addEventListener("click", () => openPackage(trigger.dataset.packageCode));
@@ -353,23 +466,23 @@ const packageData = packages.map((item) => ({
         row.append(labelElement, valueElement);
         confirmationSummary.append(row);
       };
-      addSummaryRow("العرض", activePackage.en);
-      addSummaryRow("الاسم / Name", data.customerName);
-      addSummaryRow("رقم الهاتف / Phone", data.phone, "ltr");
-      addSummaryRow("تاريخ الحضور", data.arrivalDate);
-      addSummaryRow("وقت الحضور", data.arrivalTime);
+      addSummaryRow(translations[language].package, activePackage.en);
+      addSummaryRow(translations[language].nameLabel, data.customerName);
+      addSummaryRow(translations[language].phoneLabel, data.phone, "ltr");
+      addSummaryRow(translations[language].arrivalDate, data.arrivalDate);
+      addSummaryRow(translations[language].arrivalTime, data.arrivalTime);
       const servicesRow = document.createElement("div");
       const servicesLabel = document.createElement("span");
       const servicesList = document.createElement("ul");
-      servicesLabel.textContent = "الخدمات";
+      servicesLabel.textContent = translations[language].selectedServices;
       chosenServices.forEach((service) => {
         const item = document.createElement("li");
-        item.textContent = service.ar;
+        item.textContent = language === "ar" ? service.ar : service.en;
         servicesList.append(item);
       });
       servicesRow.append(servicesLabel, servicesList);
       confirmationSummary.append(servicesRow);
-      if (data.notes) addSummaryRow("ملاحظات / Notes", data.notes);
+      if (data.notes) addSummaryRow(translations[language].notesLabel, data.notes);
       setStep("confirm");
     });
 
@@ -392,5 +505,9 @@ const packageData = packages.map((item) => ({
       }
     });
     modal.addEventListener("cancel", stopAutoContinue);
+    document.querySelector("#upgrade-close").addEventListener("click", () => {
+      document.querySelector("#upgrade-notice").hidden = true;
+    });
+    applyLanguage();
   </script>
 </BaseLayout>

@@ -34,8 +34,8 @@ export const packages: SalonPackage[] = [
     en: "AED 150 OFFER",
     price: 150,
     limit: 7,
-    availableServiceIds: ["moroccan_bath_or_facial", ...sharedServiceIds],
-    exampleServiceIds: ["moroccan_bath_or_facial", "body_scrub", "haircut", "beard_shave", "hair_blow_dry", "collagen_face_mask"],
+    availableServiceIds: ["moroccan_bath", "facial_session", ...sharedServiceIds],
+    exampleServiceIds: ["moroccan_bath", "facial_session", "body_scrub", "haircut", "beard_shave", "hair_blow_dry"],
   },
   {
     code: "royal_vip_300",
