@@ -3,6 +3,7 @@
   import { packages } from '../config/packages';
   import { services } from '../config/services';
   import Icon from '@iconify/svelte';
+  import { onMount } from 'svelte';
 
   const referenceData = {
     packages: Object.fromEntries(packages.map((item) => [item.code, item.ar])),
@@ -17,6 +18,7 @@
   let filters = { status: '', source: '', todayOnly: false };
   let selectedOrder = null;
   let copied = false;
+  let loadError = '';
 
   const formatDate = (value) =>
     new Intl.DateTimeFormat('ar-AE', { dateStyle: 'medium', timeStyle: 'short' }).format(
@@ -69,12 +71,14 @@
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ status }),
       });
+      if (!response.ok) throw new Error('تعذر تحديث حالة الطلب');
       if (response.ok) {
         selectedOrder = null;
         await loadOrders();
       }
     } catch (e) {
       console.error('Failed to update status:', e);
+      window.alert(e instanceof Error ? e.message : 'تعذر تحديث حالة الطلب');
     }
   };
 
@@ -107,6 +111,7 @@
 
   const loadOrders = async () => {
     loading = true;
+    loadError = '';
     const params = new URLSearchParams();
     if (filters.status) params.set('status', filters.status);
     if (filters.source) params.set('source', filters.source);
@@ -118,14 +123,22 @@
       orders = result.orders;
     } catch (e) {
       console.error('Failed to load orders:', e);
+      loadError = 'تعذر تحميل الطلبات';
     } finally {
       loading = false;
     }
   };
 
-  loadOrders();
-  setInterval(loadOrders, 15000);
+  onMount(() => {
+    loadOrders();
+    const refreshInterval = window.setInterval(loadOrders, 15000);
+    return () => window.clearInterval(refreshInterval);
+  });
 </script>
+
+<svelte:window on:keydown={(event) => {
+  if (event.key === 'Escape') selectedOrder = null;
+}} />
 
 <header class="control-header">
   <div>
@@ -169,7 +182,7 @@
     مواعيد اليوم
   </label>
   <p id="orders-state" role="status">
-    {loading ? 'جاري تحميل الطلبات...' : orders.length ? `${orders.length} طلب` : 'لا توجد طلبات'}
+    {loading ? 'جاري تحميل الطلبات...' : loadError || (orders.length ? `${orders.length} طلب` : 'لا توجد طلبات')}
   </p>
 </section>
 
@@ -293,8 +306,14 @@
 </section>
 
 {#if selectedOrder}
-  <dialog class="control-dialog" open>
-    <div class="control-dialog-inner">
+  <div
+    class="control-dialog"
+    role="dialog"
+    aria-modal="true"
+    aria-label={`طلب #${selectedOrder.id}`}
+    on:click={() => { selectedOrder = null; }}
+  >
+    <div class="control-dialog-inner" on:click|stopPropagation>
       <header>
         <div>
           <small>GHALY GENTS SALON</small>
@@ -377,7 +396,7 @@
         {/each}
       </footer>
     </div>
-  </dialog>
+  </div>
 {/if}
 
 {#if copied}
