@@ -13,6 +13,7 @@ export const notifyTelegram = async (env: TelegramEnv, orderId: number, order: V
     `New Ghaly request #${orderId}`,
     "",
     `Package: ${order.packageCode}`,
+    `Source: ${order.orderSource}`,
     `Customer: ${order.customerName}`,
     `Phone: ${order.phone}`,
     `Services selected: ${order.selectedServiceIds.length}`,

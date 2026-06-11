@@ -33,10 +33,11 @@ export const POST: APIRoute = async ({ request, locals }) => {
     const order = validateOrder(body);
     const result = await locals.runtime.env.DB.prepare(`
       INSERT INTO orders (
-        customer_name, phone, package_code, selected_services_json,
+        order_source, customer_name, phone, package_code, selected_services_json,
         arrival_date, arrival_time, staff_preference, notes
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
+      order.orderSource,
       order.customerName,
       order.phone,
       order.packageCode,

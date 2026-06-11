@@ -30,12 +30,17 @@ const referenceData = {
         </select>
       </label>
       <label><input id="today-filter" type="checkbox" /> مواعيد اليوم</label>
+      <label><span>المصدر</span>
+        <select id="source-filter">
+          <option value="">الكل</option><option value="home">من المنزل</option><option value="in_salon">داخل الصالون</option>
+        </select>
+      </label>
       <p id="orders-state" role="status">جاري تحميل الطلبات...</p>
     </section>
 
     <section class="orders-table-wrap">
       <table class="orders-table">
-        <thead><tr><th>#</th><th>وقت الطلب</th><th>العميل</th><th>الهاتف</th><th>العرض</th><th>الخدمات</th><th>الحالة</th><th></th></tr></thead>
+        <thead><tr><th>#</th><th>وقت الطلب</th><th>المصدر</th><th>العميل</th><th>الهاتف</th><th>العرض</th><th>الخدمات</th><th>الحالة</th><th></th></tr></thead>
         <tbody id="orders-table-body"></tbody>
       </table>
     </section>
@@ -52,6 +57,7 @@ const referenceData = {
 
   <script is:inline define:vars={{ referenceData }}>
     const statusLabels = { new: "جديد", acknowledged: "تم الاطلاع", completed: "مكتمل", cancelled: "ملغي" };
+    const sourceLabels = { home: "من المنزل", in_salon: "داخل الصالون" };
     const state = document.querySelector("#orders-state");
     const tableBody = document.querySelector("#orders-table-body");
     const cards = document.querySelector("#orders-cards");
@@ -69,8 +75,8 @@ const referenceData = {
       const content = document.querySelector("#details-content");
       content.replaceChildren();
       const rows = [
-        ["العميل", order.customer_name], ["الهاتف", order.phone], ["العرض", packageName(order.package_code)],
-        ["موعد الحضور", `${order.arrival_date} · ${order.arrival_time}`], ["تفضيل الموظف", order.staff_preference || "—"],
+        ["المصدر", sourceLabels[order.order_source]], ["العميل", order.customer_name], ["الهاتف", order.phone || "—"], ["العرض", packageName(order.package_code)],
+        ["موعد الحضور", order.order_source === "home" ? `${order.arrival_date} · ${order.arrival_time}` : "داخل الصالون"], ["تفضيل الموظف", order.staff_preference || "—"],
         ["ملاحظات", order.notes || "—"], ["وقت الطلب", formatDate(order.created_at)],
       ];
       rows.forEach(([label, value]) => {
@@ -92,14 +98,14 @@ const referenceData = {
       tableBody.replaceChildren(); cards.replaceChildren();
       orders.forEach((order) => {
         const row = document.createElement("tr");
-        [order.id, formatDate(order.created_at), order.customer_name, order.phone, packageName(order.package_code), order.selectedServiceIds.length, statusLabels[order.status]].forEach((value) => {
+        [order.id, formatDate(order.created_at), sourceLabels[order.order_source], order.customer_name, order.phone || "—", packageName(order.package_code), order.selectedServiceIds.length, statusLabels[order.status]].forEach((value) => {
           const cell = document.createElement("td"); cell.textContent = value; row.append(cell);
         });
         const actionCell = document.createElement("td"); const action = document.createElement("button"); action.type = "button"; action.textContent = "التفاصيل";
         action.addEventListener("click", () => openDetails(order.id)); actionCell.append(action); row.append(actionCell); tableBody.append(row);
         const card = document.createElement("button"); card.type = "button"; card.className = "order-card";
         const title = document.createElement("strong"); title.textContent = `#${order.id} · ${order.customer_name}`;
-        const meta = document.createElement("span"); meta.textContent = `${packageName(order.package_code)} · ${order.arrival_date} ${order.arrival_time}`;
+        const meta = document.createElement("span"); meta.textContent = `${sourceLabels[order.order_source]} · ${packageName(order.package_code)} · ${order.order_source === "home" ? `${order.arrival_date} ${order.arrival_time}` : "الآن"}`;
         const badge = document.createElement("small"); badge.textContent = statusLabels[order.status]; badge.dataset.status = order.status;
         card.append(title, meta, badge); card.addEventListener("click", () => openDetails(order.id)); cards.append(card);
       });
@@ -112,6 +118,8 @@ const referenceData = {
       const status = document.querySelector("#status-filter").value;
       if (status) params.set("status", status);
       if (document.querySelector("#today-filter").checked) params.set("date", "today");
+      const source = document.querySelector("#source-filter").value;
+      if (source) params.set("source", source);
       try {
         const response = await fetch(`/api/control/orders?${params}`, { headers: { accept: "application/json" } });
         const result = await response.json(); if (!response.ok) throw new Error(result.error);
@@ -126,6 +134,7 @@ const referenceData = {
     document.querySelector("#refresh-orders").addEventListener("click", loadOrders);
     document.querySelector("#status-filter").addEventListener("change", loadOrders);
     document.querySelector("#today-filter").addEventListener("change", loadOrders);
+    document.querySelector("#source-filter").addEventListener("change", loadOrders);
     document.querySelector("#close-details").addEventListener("click", () => dialog.close());
     loadOrders(); window.setInterval(loadOrders, 15000);
   </script>

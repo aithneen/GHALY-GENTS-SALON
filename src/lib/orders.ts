@@ -4,6 +4,7 @@ import { serviceById } from "../config/services";
 const allowedKeys = new Set([
   "customerName",
   "phone",
+  "orderSource",
   "packageCode",
   "selectedServiceIds",
   "arrivalDate",
@@ -14,12 +15,13 @@ const allowedKeys = new Set([
 ]);
 
 export type ValidOrder = {
+  orderSource: "home" | "in_salon";
   customerName: string;
   phone: string;
   packageCode: PackageCode;
   selectedServiceIds: string[];
-  arrivalDate: string;
-  arrivalTime: string;
+  arrivalDate: string | null;
+  arrivalTime: string | null;
   staffPreference: string | null;
   notes: string | null;
 };
@@ -54,8 +56,12 @@ export const validateOrder = (input: unknown): ValidOrder => {
   }
 
   const phone = typeof body.phone === "string" ? body.phone.trim() : "";
-  if (!/^[+\d][\d\s()-]{6,19}$/.test(phone)) {
+  const orderSource = body.orderSource === "in_salon" ? "in_salon" : body.orderSource === "home" ? "home" : null;
+  if (!orderSource) errors.orderSource = "Order source is invalid.";
+  if (phone && !/^[+\d][\d\s()-]{6,19}$/.test(phone)) {
     errors.phone = "Phone number is invalid.";
+  } else if (orderSource === "home" && !phone) {
+    errors.phone = "Phone number is required.";
   }
 
   const packageItem = packages.find((item) => item.code === body.packageCode);
@@ -93,10 +99,10 @@ export const validateOrder = (input: unknown): ValidOrder => {
 
   const arrivalDate = typeof body.arrivalDate === "string" ? body.arrivalDate : "";
   const arrivalTime = typeof body.arrivalTime === "string" ? body.arrivalTime : "";
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(arrivalDate) || Number.isNaN(Date.parse(`${arrivalDate}T00:00:00Z`))) {
+  if (orderSource === "home" && (!/^\d{4}-\d{2}-\d{2}$/.test(arrivalDate) || Number.isNaN(Date.parse(`${arrivalDate}T00:00:00Z`)))) {
     errors.arrivalDate = "Arrival date is invalid.";
   }
-  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(arrivalTime)) {
+  if (orderSource === "home" && !/^([01]\d|2[0-3]):[0-5]\d$/.test(arrivalTime)) {
     errors.arrivalTime = "Arrival time is invalid.";
   }
 
@@ -108,12 +114,13 @@ export const validateOrder = (input: unknown): ValidOrder => {
   if (Object.keys(errors).length) throw new OrderValidationError(errors);
 
   return {
+    orderSource: orderSource!,
     customerName,
     phone,
     packageCode: packageItem!.code,
     selectedServiceIds,
-    arrivalDate,
-    arrivalTime,
+    arrivalDate: orderSource === "home" ? arrivalDate : null,
+    arrivalTime: orderSource === "home" ? arrivalTime : null,
     staffPreference: staffPreference ?? null,
     notes: notes ?? null,
   };
