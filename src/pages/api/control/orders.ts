@@ -1,13 +1,9 @@
 import type { APIRoute } from "astro";
-import { controlJson, getControlIdentity, isOrderStatus } from "../../../lib/control";
+import { controlJson, isOrderStatus } from "../../../lib/control";
 
 export const prerender = false;
 
-export const GET: APIRoute = async ({ request, locals, url }) => {
-  if (!getControlIdentity(request, locals.runtime.env.CONTROL_ALLOWED_EMAILS)) {
-    return controlJson({ ok: false, error: "Forbidden." }, 403);
-  }
-
+export const GET: APIRoute = async ({ locals, url }) => {
   const status = url.searchParams.get("status");
   const date = url.searchParams.get("date");
   if (status && !isOrderStatus(status)) return controlJson({ ok: false, error: "Invalid status." }, 400);

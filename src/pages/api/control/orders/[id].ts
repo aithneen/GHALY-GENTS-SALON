@@ -1,12 +1,9 @@
 import type { APIRoute } from "astro";
-import { controlJson, getControlIdentity, isOrderStatus } from "../../../../lib/control";
+import { controlJson, isOrderStatus } from "../../../../lib/control";
 
 export const prerender = false;
 
 export const PATCH: APIRoute = async ({ request, locals, params }) => {
-  if (!getControlIdentity(request, locals.runtime.env.CONTROL_ALLOWED_EMAILS)) {
-    return controlJson({ ok: false, error: "Forbidden." }, 403);
-  }
   if (!request.headers.get("content-type")?.toLowerCase().includes("application/json")) {
     return controlJson({ ok: false, error: "Content-Type must be application/json." }, 415);
   }

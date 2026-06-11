@@ -8,7 +8,6 @@
     "directory": "./dist"
   },
   "vars": {
-    "CONTROL_ALLOWED_EMAILS": "aithneen@gmail.com",
     "CONTROL_DASHBOARD_URL": "https://ghaly.aithneen.workers.dev/control/orders"
   },
   "d1_databases": [

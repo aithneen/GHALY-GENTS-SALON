@@ -2,12 +2,8 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { packages } from "../../config/packages";
 import { services } from "../../config/services";
-import { getControlIdentity } from "../../lib/control";
 
 export const prerender = false;
-
-const identity = getControlIdentity(Astro.request, Astro.locals.runtime.env.CONTROL_ALLOWED_EMAILS);
-if (!identity) return new Response("Forbidden", { status: 403, headers: { "x-robots-tag": "noindex, nofollow" } });
 
 const referenceData = {
   packages: Object.fromEntries(packages.map((item) => [item.code, { ar: item.ar, en: item.en }])),
@@ -21,7 +17,6 @@ const referenceData = {
       <div>
         <p>GHALY GENTS SALON</p>
         <h1>طلبات الصالون</h1>
-        <small dir="ltr">{identity}</small>
       </div>
       <button id="refresh-orders" type="button">تحديث</button>
     </header>

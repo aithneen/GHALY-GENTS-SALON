@@ -7,7 +7,6 @@ declare namespace App {
     runtime: {
       env: {
         DB: D1Database;
-        CONTROL_ALLOWED_EMAILS?: string;
         TELEGRAM_BOT_TOKEN?: string;
         TELEGRAM_CHAT_ID?: string;
         CONTROL_DASHBOARD_URL?: string;
