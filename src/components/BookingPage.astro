@@ -201,6 +201,9 @@ const packageData = packages.map((item) => ({
         <section class="modal-step" data-step="confirm">
           <h3 data-i18n="confirm">التأكيد</h3>
           <div class="confirmation-summary" id="confirmation-summary"></div>
+          <p class="auto-continue" id="auto-submit">
+            <span data-i18n="autoSubmit">سيتم إرسال الطلب تلقائياً خلال</span> <strong id="auto-submit-seconds">10</strong> <span data-i18n="seconds">ثانية</span>
+          </p>
           <div class="modal-actions">
             <button class="modal-button modal-button-muted" type="button" id="back-details" data-i18n="back">تراجع</button>
             <button class="modal-button modal-button-gold" type="button" id="save-order" data-i18n="confirm">تأكيد</button>
@@ -252,18 +255,23 @@ const packageData = packages.map((item) => ({
     const autoSeconds = document.querySelector("#auto-seconds");
     const customerForm = document.querySelector("#customer-form");
     const confirmationSummary = document.querySelector("#confirmation-summary");
+    const autoSubmitSeconds = document.querySelector("#auto-submit-seconds");
+    const saveOrderButton = document.querySelector("#save-order");
     let activePackage = null;
     let selectedIds = [];
     let autoTimer = null;
+    let autoSubmitTimer = null;
     let upgradeTimer = null;
     let secondsRemaining = 30;
+    let submitSecondsRemaining = 10;
+    let isSavingOrder = false;
     let language = localStorage.getItem("ghaly-language") || "ar";
     const translations = {
       ar: {
         heroEyebrow: isInSalon ? "GHALY GENTS SALON" : "LUXURY STARTS WITH SELF CARE", heroTitle: isInSalon ? "اختر خدماتك داخل الصالون" : "الفخامة تبدأ من العناية بنفسك",
         professionalService: "خدمة احترافية", guaranteedResults: "نتائج مضمونة", satisfactionGoal: "رضاكم هو هدفنا",
         formTitle: "استمارة اختيار الخدمات", services: "الخدمات", details: "البيانات", confirm: "التأكيد",
-        autoContinue: "الانتقال إلى البيانات خلال", seconds: "ثانية", back: "تراجع", continue: "استمرار",
+        autoContinue: "الانتقال إلى البيانات خلال", autoSubmit: "سيتم إرسال الطلب تلقائياً خلال", seconds: "ثانية", back: "تراجع", continue: "استمرار",
         nameLabel: "الاسم / Name", phoneLabel: isInSalon ? "رقم الهاتف اختياري / Phone optional" : "رقم الهاتف / Phone", arrivalDate: "تاريخ الحضور",
         arrivalTime: "وقت الحضور", staffPreference: "تفضيل الموظف / Staff preference", notesLabel: "ملاحظات / Notes", confirmed: isInSalon ? "تم تسجيل طلبك" : "تم استلام طلبك بنجاح",
         successMessage: isInSalon ? "يرجى التحدث مع الاستقبال" : "سيتواصل معك الاستقبال لتأكيد الموعد", orderNumber: "رقم الطلب", queueNumber: "رقم الانتظار", close: "إغلاق", fiveIncluded: "5 خدمات مشمولة",
@@ -279,7 +287,7 @@ const packageData = packages.map((item) => ({
         heroEyebrow: isInSalon ? "GHALY GENTS SALON" : "LUXURY STARTS WITH SELF CARE", heroTitle: isInSalon ? "Choose Your Services In The Salon" : "Luxury Starts With Self Care",
         professionalService: "Professional Service", guaranteedResults: "Guaranteed Results", satisfactionGoal: "Your Satisfaction Is Our Goal",
         formTitle: "Service Selection Form", services: "Services", details: "Details", confirm: "Confirm",
-        autoContinue: "Continuing to details in", seconds: "seconds", back: "Back", continue: "Continue",
+        autoContinue: "Continuing to details in", autoSubmit: "The request will be submitted automatically in", seconds: "seconds", back: "Back", continue: "Continue",
         nameLabel: "Name", phoneLabel: isInSalon ? "Phone optional" : "Phone", arrivalDate: "Arrival Date",
         arrivalTime: "Arrival Time", staffPreference: "Staff preference", notesLabel: "Notes", confirmed: isInSalon ? "Your Request Is Registered" : "Your Request Has Been Received",
         successMessage: isInSalon ? "Please speak with reception" : "Reception will contact you to confirm the appointment", orderNumber: "Request number", queueNumber: "Queue number", close: "Close", fiveIncluded: "5 Services Included",
@@ -348,6 +356,25 @@ const packageData = packages.map((item) => ({
         if (secondsRemaining <= 0) {
           stopAutoContinue();
           setStep("details");
+        }
+      }, 1000);
+    };
+
+    const stopAutoSubmit = () => {
+      if (autoSubmitTimer) window.clearInterval(autoSubmitTimer);
+      autoSubmitTimer = null;
+      submitSecondsRemaining = 10;
+      autoSubmitSeconds.textContent = "10";
+    };
+
+    const startAutoSubmit = () => {
+      stopAutoSubmit();
+      autoSubmitTimer = window.setInterval(() => {
+        submitSecondsRemaining -= 1;
+        autoSubmitSeconds.textContent = String(submitSecondsRemaining);
+        if (submitSecondsRemaining <= 0) {
+          stopAutoSubmit();
+          saveOrderButton.click();
         }
       }, 1000);
     };
@@ -466,6 +493,7 @@ const packageData = packages.map((item) => ({
     document.querySelectorAll("[data-close-modal]").forEach((button) => {
       button.addEventListener("click", () => {
         stopAutoContinue();
+        stopAutoSubmit();
         modal.close();
       });
     });
@@ -475,7 +503,10 @@ const packageData = packages.map((item) => ({
       setStep("details");
     });
     document.querySelector("#back-services").addEventListener("click", () => setStep("services"));
-    document.querySelector("#back-details").addEventListener("click", () => setStep("details"));
+    document.querySelector("#back-details").addEventListener("click", () => {
+      stopAutoSubmit();
+      setStep("details");
+    });
 
     customerForm.addEventListener("submit", (event) => {
       event.preventDefault();
@@ -512,9 +543,12 @@ const packageData = packages.map((item) => ({
       confirmationSummary.append(servicesRow);
       if (data.notes) addSummaryRow(translations[language].notesLabel, data.notes);
       setStep("confirm");
+      startAutoSubmit();
     });
 
-    document.querySelector("#save-order").addEventListener("click", async (event) => {
+    saveOrderButton.addEventListener("click", async (event) => {
+      if (isSavingOrder) return;
+      stopAutoSubmit();
       const saveButton = event.currentTarget;
       const data = Object.fromEntries(new FormData(customerForm));
       const order = {
@@ -529,6 +563,7 @@ const packageData = packages.map((item) => ({
         notes: data.notes,
         website: data.website,
       };
+      isSavingOrder = true;
       saveButton.disabled = true;
       try {
         const response = await fetch("/api/orders", {
@@ -544,6 +579,7 @@ const packageData = packages.map((item) => ({
       } catch (error) {
         window.alert(error instanceof Error ? error.message : "Unable to save order.");
       } finally {
+        isSavingOrder = false;
         saveButton.disabled = false;
       }
     });
@@ -551,10 +587,14 @@ const packageData = packages.map((item) => ({
     modal.addEventListener("click", (event) => {
       if (event.target === modal) {
         stopAutoContinue();
+        stopAutoSubmit();
         modal.close();
       }
     });
-    modal.addEventListener("cancel", stopAutoContinue);
+    modal.addEventListener("cancel", () => {
+      stopAutoContinue();
+      stopAutoSubmit();
+    });
     document.querySelector("#upgrade-close").addEventListener("click", () => {
       if (upgradeTimer) window.clearTimeout(upgradeTimer);
       upgradeTimer = null;
