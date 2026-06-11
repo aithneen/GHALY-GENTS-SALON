@@ -565,16 +565,17 @@ a:focus-visible {
 }
 
 .upgrade-notice {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto minmax(0, 28rem) auto;
   align-items: center;
+  justify-content: center;
   gap: 0.75rem;
-  width: 100%;
-  margin-block: 1rem;
-  border: 1px solid var(--color-gold);
-  border-radius: 1rem;
-  background: var(--color-panel);
-  padding: 0.85rem;
+  background: rgb(0 0 0 / 82%);
+  padding: 1.5rem;
+  backdrop-filter: blur(8px);
 }
 
 .upgrade-notice[hidden] {
@@ -582,8 +583,8 @@ a:focus-visible {
 }
 
 .upgrade-notice > svg {
-  width: 2rem;
-  height: 2rem;
+  width: 3rem;
+  height: 3rem;
   color: var(--color-gold);
 }
 
@@ -594,12 +595,13 @@ a:focus-visible {
 
 .upgrade-notice strong {
   color: var(--color-gold-light);
-  font-size: 0.85rem;
+  font-size: 1.3rem;
 }
 
 .upgrade-notice span {
-  color: var(--color-muted);
-  font-size: 0.7rem;
+  color: var(--color-ivory);
+  font-size: 0.95rem;
+  line-height: 1.7;
 }
 
 .upgrade-notice button {
@@ -616,6 +618,18 @@ a:focus-visible {
 .upgrade-notice button svg {
   width: 1.4rem;
   height: 1.4rem;
+}
+
+@media (max-width: 640px) {
+  .upgrade-notice {
+    grid-template-columns: 1fr auto;
+    text-align: center;
+  }
+
+  .upgrade-notice > svg {
+    grid-column: 1 / -1;
+    justify-self: center;
+  }
 }
 
 .offer-card-header {

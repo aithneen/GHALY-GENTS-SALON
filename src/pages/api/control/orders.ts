@@ -24,11 +24,17 @@ export const GET: APIRoute = async ({ locals, url }) => {
   }
 
   const query = `
-    SELECT id, created_at, updated_at, order_source, customer_name, phone, package_code,
-      selected_services_json, arrival_date, arrival_time, staff_preference, notes, status
-    FROM orders
+    SELECT o.id, o.created_at, o.updated_at, o.order_source, o.customer_name, o.phone, o.package_code,
+      o.selected_services_json, o.arrival_date, o.arrival_time, o.staff_preference, o.notes, o.status,
+      CASE WHEN o.order_source = 'in_salon' AND o.status IN ('new', 'acknowledged') THEN (
+        SELECT COUNT(*) FROM orders q
+        WHERE q.order_source = 'in_salon'
+          AND q.status IN ('new', 'acknowledged')
+          AND (q.created_at < o.created_at OR (q.created_at = o.created_at AND q.id <= o.id))
+      ) ELSE NULL END AS queue_position
+    FROM orders o
     ${conditions.length ? `WHERE ${conditions.join(" AND ")}` : ""}
-    ORDER BY created_at DESC
+    ORDER BY o.created_at DESC
     LIMIT 200
   `;
   const result = await locals.runtime.env.DB.prepare(query).bind(...bindings).all();

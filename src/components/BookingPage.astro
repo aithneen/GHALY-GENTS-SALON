@@ -255,6 +255,7 @@ const packageData = packages.map((item) => ({
     let activePackage = null;
     let selectedIds = [];
     let autoTimer = null;
+    let upgradeTimer = null;
     let secondsRemaining = 30;
     let language = localStorage.getItem("ghaly-language") || "ar";
     const translations = {
@@ -372,6 +373,16 @@ const packageData = packages.map((item) => ({
       }
     };
 
+    const showUpgradeNotice = () => {
+      const notice = document.querySelector("#upgrade-notice");
+      notice.hidden = false;
+      if (upgradeTimer) window.clearTimeout(upgradeTimer);
+      upgradeTimer = window.setTimeout(() => {
+        notice.hidden = true;
+        upgradeTimer = null;
+      }, 2000);
+    };
+
     const renderServices = () => {
       selectionGrid.replaceChildren();
       activePackage.services.forEach((service) => {
@@ -397,7 +408,7 @@ const packageData = packages.map((item) => ({
             && ((service.id === "moroccan_bath" && selectedIds.includes("facial_session"))
             || (service.id === "facial_session" && selectedIds.includes("moroccan_bath")));
           if (isExclusiveBlocked) {
-            document.querySelector("#upgrade-notice").hidden = false;
+            showUpgradeNotice();
             return;
           }
           selectedIds = selectedIds.includes(service.id)
@@ -545,6 +556,8 @@ const packageData = packages.map((item) => ({
     });
     modal.addEventListener("cancel", stopAutoContinue);
     document.querySelector("#upgrade-close").addEventListener("click", () => {
+      if (upgradeTimer) window.clearTimeout(upgradeTimer);
+      upgradeTimer = null;
       document.querySelector("#upgrade-notice").hidden = true;
     });
     applyLanguage();
